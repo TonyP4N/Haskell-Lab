@@ -43,19 +43,22 @@ data Neighbours = Neighbours {
 getGridTL :: Neighbour -> Neighbour
 getGridTL Empty = Empty
 getGridTL (NQuadtree (Leaf colour)) = NQuadtree (Leaf colour)
-getGridTL (NQuadtree (Branch a b c d)) = NQuadtree a
+getGridTL (NQuadtree (Branch a _ _ _)) = NQuadtree a
+
 getGridTR :: Neighbour -> Neighbour
 getGridTR Empty = Empty
 getGridTR (NQuadtree (Leaf colour)) = NQuadtree (Leaf colour)
-getGridTR (NQuadtree (Branch a b c d)) = NQuadtree b
+getGridTR (NQuadtree (Branch _ b _ _)) = NQuadtree b
+
 getGridBL :: Neighbour -> Neighbour
 getGridBL Empty = Empty
 getGridBL (NQuadtree (Leaf colour)) = NQuadtree (Leaf colour)
-getGridBL (NQuadtree (Branch a b c d)) = NQuadtree c
+getGridBL (NQuadtree (Branch _ _ c _)) = NQuadtree c
+
 getGridBR :: Neighbour -> Neighbour
 getGridBR Empty = Empty
 getGridBR (NQuadtree (Leaf colour)) = NQuadtree (Leaf colour)
-getGridBR (NQuadtree (Branch a b c d)) = NQuadtree d
+getGridBR (NQuadtree (Branch _ _ _ d)) = NQuadtree d
 
 --define functions that get neighbours from different directions
 topEdge :: Neighbour -> [Colour]
@@ -86,21 +89,29 @@ concatNeighsOut (Cell colour neighColours) neighbours = Cell colour (neighColour
       leftEdge (right neighbours) ++
       rightEdge (left neighbours))
 --consider the 4 quadrants separately
-concatNeighsOut (Quadrant a b c d) neighbours = Quadrant (concatNeighsOut a (Neighbours {
+concatNeighsOut (Quadrant a b c d) neighbours = Quadrant
+    --The Top Left quadrant
+    (concatNeighsOut a (Neighbours {
     top = getGridBL (top neighbours),
     bottom = Empty,
     left = getGridTR (left neighbours),
     right = Empty}))
+
+    --The Top Right quadrant
     (concatNeighsOut b (Neighbours {
     top = getGridBR (top neighbours),
     bottom = Empty,
     left = Empty,
     right = getGridTL (right neighbours)}))
+
+    --The Bottom Left quadrant
     (concatNeighsOut c (Neighbours {
     top = Empty,
     bottom = getGridTL (bottom neighbours),
     left = getGridBR (left neighbours),
     right = Empty}))
+
+    --The Bottom Right quadrant
     (concatNeighsOut d (Neighbours {
     top = Empty,
     bottom = getGridTR (bottom neighbours),
@@ -110,21 +121,29 @@ concatNeighsOut (Quadrant a b c d) neighbours = Quadrant (concatNeighsOut a (Nei
 --update NQuadtree(inside)
 concatNeighsIn :: ColourTree -> TreeNeighbours
 concatNeighsIn (Leaf colour) = Cell colour []
-concatNeighsIn (Branch a b c d) = Quadrant (concatNeighsOut (concatNeighsIn a) (Neighbours {
+concatNeighsIn (Branch a b c d) = Quadrant
+    --The Top Left quadrant
+    (concatNeighsOut (concatNeighsIn a) (Neighbours {
     top = Empty,
     bottom = NQuadtree c,
     left = Empty,
     right = NQuadtree b}))
+
+    --The Top Right quadrant
     (concatNeighsOut (concatNeighsIn b) (Neighbours {
     top = Empty,
     bottom = NQuadtree d,
     left = NQuadtree a,
     right = Empty}))
+
+    --The Bottom Left quadrant
     (concatNeighsOut (concatNeighsIn c) (Neighbours {
     top = NQuadtree a,
     bottom = Empty,
     left = Empty,
     right = NQuadtree d}))
+
+    --The Bottom Right quadrant
     (concatNeighsOut (concatNeighsIn d) (Neighbours {
     top = NQuadtree b,
     bottom = Empty,
